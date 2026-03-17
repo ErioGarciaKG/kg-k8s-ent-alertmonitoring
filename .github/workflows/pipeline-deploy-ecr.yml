@@ -67,5 +67,5 @@ jobs:
         with:
           context: .
           push: true
-          tags: 575244879880.dkr.ecr.us-west-2.amazonaws.com/kg-k8s/ent-checkdependencies:${{env.tag}}  
+          tags: 575244879880.dkr.ecr.us-west-2.amazonaws.com/kg-k8s-ent-checkdependencies:${{env.tag}}  
  
