@@ -76,9 +76,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   /** Append the final message state to the history list. */
-  async saveToHistory(msg: QueueMessage): Promise<void> {
-    await this.client.lpush('alert:queue-history', JSON.stringify(msg));
-    this.logger.log(`[${msg.id}] Saved to alert:queue-history`);
+  async saveToHistory(msg: QueueMessage, historyKey: string): Promise<void> {
+    await this.client.lpush(historyKey, JSON.stringify(msg));
+    this.logger.log(`[${msg.id}] Saved to ${historyKey}`);
   }
 
   private async saveMessage(msg: QueueMessage): Promise<void> {

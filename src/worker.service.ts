@@ -8,13 +8,15 @@ import { QueueMessage } from './queue-message.interface';
 export class WorkerService {
   private readonly logger = new Logger(WorkerService.name);
   private readonly queueKey: string;
+  private readonly historyKey: string;
 
   constructor(
     private readonly redis: RedisService,
     private readonly alertMonitoring: AlertMonitoringService,
     private readonly config: ConfigService,
   ) {
-    this.queueKey = this.config.get<string>('REDIS_QUEUE_KEY', 'alert:queue');
+    this.queueKey   = this.config.get<string>('REDIS_QUEUE_KEY',   'ent-alertmonitoring-queue');
+    this.historyKey = this.config.get<string>('REDIS_HISTORY_KEY', 'ent-alertmonitoring-history-queue');
   }
 
   async run(): Promise<void> {
@@ -49,7 +51,7 @@ export class WorkerService {
       msg['ending-time'] = new Date().toISOString();
       msg.duration = duration;
       await this.redis.updateMessage(msg);
-      await this.redis.saveToHistory(msg);
+      await this.redis.saveToHistory(msg, this.historyKey);
       this.logger.log(`[${msg.id}] Completed in ${duration.toFixed(2)}s`);
 
     } catch (err) {
@@ -59,7 +61,7 @@ export class WorkerService {
       msg['ending-time'] = new Date().toISOString();
       msg.duration = duration;
       await this.redis.updateMessage(msg);
-      await this.redis.saveToHistory(msg);
+      await this.redis.saveToHistory(msg, this.historyKey);
       this.logger.error(`[${msg.id}] Error after ${duration.toFixed(2)}s`, err);
     }
   }

@@ -16,7 +16,7 @@ export class SqsService {
     this.client = new SQSClient({
       region: this.config.get<string>('AWS_REGION', 'us-west-2'),
     });
-    this.env = this.config.get<string>('APP_ENV', 'local');
+    this.env = this.config.get<string>('ENV', 'local');
   }
 
   async send(queueName: string, payload: unknown): Promise<void> {
