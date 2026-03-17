@@ -1,0 +1,71 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI-CD
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main", "uat", "dev" ]
+ 
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build-kg-ent-checkdependencies:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required to request an OIDC JWT
+      contents: read
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 23
+          
+      # TODO implement sonar qube scan coverage scan 
+      
+      - name: Set environment tag
+        id: set-tag
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+            echo "tag=dev" >> $GITHUB_ENV
+            echo "tag=dev" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" == "refs/heads/uat" ]; then
+            echo "tag=uat" >> $GITHUB_ENV
+            echo "tag=uat" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "tag=prod" >> $GITHUB_ENV
+            echo "tag=prod" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Display environment tag
+        run: |
+          echo "Environment tag: ${{ env.tag }}"
+          echo "Branch: ${{ github.ref }}"
+      # Action for ECR
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::575244879880:role/github-actions
+          role-session-name: github-actions
+          role-duration-seconds: 1200
+          aws-region: us-west-2 # Replace with your AWS region
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Show tag value
+        run: echo "env variable tag is $tag"
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: 575244879880.dkr.ecr.us-west-2.amazonaws.com/kg-k8s/ent-checkdependencies:${{env.tag}}  
+ 
