@@ -54,8 +54,14 @@ jobs:
           role-session-name: github-actions
           role-duration-seconds: 1200
           aws-region: us-west-2 # Replace with your AWS region
-          audience: sts.amazonaws.com 
-          
+          audience: sts.amazonaws.com
+          http-proxy: ""  # rule out proxy issues
+          continue-on-error: true  # let next step run
+
+      - name: Show caller identity (if assumed)
+        run: aws sts get-caller-identity
+        continue-on-error: true
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
